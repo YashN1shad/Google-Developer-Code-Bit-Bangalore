@@ -23,22 +23,22 @@ export default function NotGambling() {
   const particlesRef = useRef<FireworkParticle[]>([]);
   const animationFrameRef = useRef<number | null>(null);
 
-  // Trigger colorful fireworks explosion inside this section
+  // Fireworks explosion inside this section
   const launchFirework = useCallback((originX: number, originY: number) => {
     const colors = [
-      "#22d3ee", // cyan
-      "#f43f5e", // rose
+      "#facc15", // bright gold
       "#fbbf24", // amber
-      "#a855f7", // purple
-      "#34d399", // emerald
-      "#38bdf8", // sky
-      "#ffffff", // white
+      "#f43f5e", // casino ruby
+      "#ffffff", // diamond white
+      "#38bdf8", // electric cyan
+      "#a855f7", // royal purple
+      "#4ade80", // lucky green
     ];
-    const particleCount = 70;
+    const particleCount = 75;
 
     for (let i = 0; i < particleCount; i++) {
       const angle = (Math.PI * 2 * i) / particleCount + (Math.random() - 0.5) * 0.4;
-      const speed = Math.random() * 6 + 2;
+      const speed = Math.random() * 6.5 + 2;
       const color = colors[Math.floor(Math.random() * colors.length)];
       particlesRef.current.push({
         x: originX,
@@ -47,7 +47,7 @@ export default function NotGambling() {
         vy: Math.sin(angle) * speed,
         alpha: 1,
         color,
-        size: Math.random() * 3 + 2,
+        size: Math.random() * 3.5 + 2,
         decay: Math.random() * 0.015 + 0.008,
       });
     }
@@ -87,7 +87,7 @@ export default function NotGambling() {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = 10;
         ctx.shadowColor = p.color;
         ctx.fill();
         ctx.restore();
@@ -110,25 +110,22 @@ export default function NotGambling() {
     };
   }, []);
 
-  // Continuous fireworks blast sequence when winning
   const triggerFireworksShow = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const w = canvas.offsetWidth;
     const h = canvas.offsetHeight;
 
-    // Burst multiple bursts across the section
-    const burstCount = 6;
+    const burstCount = 7;
     for (let i = 0; i < burstCount; i++) {
       setTimeout(() => {
-        const x = w * (0.2 + Math.random() * 0.6);
-        const y = h * (0.2 + Math.random() * 0.4);
+        const x = w * (0.15 + Math.random() * 0.7);
+        const y = h * (0.15 + Math.random() * 0.45);
         launchFirework(x, y);
-      }, i * 350);
+      }, i * 320);
     }
   }, [launchFirework]);
 
-  // Generate 3 random digits with rapid shuffle animation
   const generateDigits = (forceJackpot = false) => {
     if (isSpinning) return;
     setIsSpinning(true);
@@ -143,15 +140,14 @@ export default function NotGambling() {
       ]);
       counter++;
 
-      if (counter > 15) {
+      if (counter > 16) {
         clearInterval(spinInterval);
 
         let finalD1: number, finalD2: number, finalD3: number;
         if (forceJackpot) {
-          const lucky = 7;
-          finalD1 = lucky;
-          finalD2 = lucky;
-          finalD3 = lucky;
+          finalD1 = 7;
+          finalD2 = 7;
+          finalD3 = 7;
         } else {
           finalD1 = Math.floor(Math.random() * 10);
           finalD2 = Math.floor(Math.random() * 10);
@@ -168,7 +164,7 @@ export default function NotGambling() {
           triggerFireworksShow();
         }
       }
-    }, 60);
+    }, 55);
   };
 
   const isGenerated = digits !== null;
@@ -179,108 +175,157 @@ export default function NotGambling() {
       id="not-gambling"
       className="relative py-24 px-4 sm:px-6 max-w-4xl mx-auto scroll-mt-20 overflow-hidden"
     >
-      {/* Interactive Fireworks Canvas restricted to this particular section */}
+      {/* Fireworks Canvas restricted to this section */}
       <canvas
         ref={canvasRef}
         className="pointer-events-none absolute inset-0 z-20 w-full h-full"
         aria-hidden="true"
       />
 
-      <div className="relative z-10 text-center max-w-2xl mx-auto mb-10">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-pink-500/30 bg-pink-950/30 text-pink-400 font-mono text-xs uppercase tracking-widest mb-3 backdrop-blur-sm">
-          <span>🎰</span> Not Gambling Section
+      {/* Header */}
+      <div className="relative z-10 text-center max-w-2xl mx-auto mb-8">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-400/50 bg-black/60 text-amber-300 font-mono text-xs uppercase tracking-widest mb-3 backdrop-blur-md shadow-[0_0_15px_rgba(251,191,36,0.2)]">
+          <span>🍒</span> 100% Certified Skill Lounge <span>🎰</span>
         </div>
-        <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-3">
-          100% Certified Skill-Based Randomizer
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-2">
+          The Lucky Pixel Slot Machine
         </h2>
-        <p className="text-slate-400 text-sm sm:text-base">
-          Roll 3 digits. If all 3 match, enjoy fireworks in this section. If they don&apos;t... well, the tears speak for themselves.
+        <p className="text-amber-100/80 text-sm sm:text-base">
+          Pull the lever or click spin to generate 3 random digits in the slot reels. Match all 3 to set off fireworks!
         </p>
       </div>
 
-      {/* Main Machine Card */}
-      <div className="relative z-10 max-w-md mx-auto rounded-3xl border border-slate-800 bg-slate-900/60 backdrop-blur-xl p-8 shadow-[0_0_50px_-12px_rgba(6,182,212,0.15)] text-center">
-        {/* Digits Display Area */}
-        <div className="flex items-center justify-center gap-3 sm:gap-4 my-6">
-          {[0, 1, 2].map((idx) => {
-            const digitValue = digits ? digits[idx] : "-";
-            return (
-              <div
-                key={idx}
-                className={`w-16 h-24 sm:w-20 sm:h-28 rounded-2xl flex items-center justify-center text-4xl sm:text-5xl font-extrabold font-mono transition-all duration-300 ${
-                  hasWon
-                    ? "bg-gradient-to-b from-amber-500/20 to-yellow-500/30 border-2 border-yellow-400 text-yellow-300 shadow-[0_0_25px_rgba(250,204,21,0.5)] scale-105 animate-bounce"
-                    : isLoss
-                    ? "bg-slate-950/90 border border-slate-800 text-slate-200"
-                    : "bg-slate-950/80 border border-slate-800 text-cyan-400"
-                }`}
-              >
-                <span className={isSpinning ? "blur-[1px] opacity-80" : "opacity-100"}>
-                  {digitValue}
-                </span>
-              </div>
-            );
-          })}
+      {/* Pixel Art Slot Machine Wrapper */}
+      <div className="relative z-10 max-w-[340px] sm:max-w-[420px] mx-auto text-center">
+        {/* Machine Frame with Realistic Shadow */}
+        <div className="relative mx-auto drop-shadow-[0_20px_45px_rgba(0,0,0,0.85)]">
+          {/* Base Slot Machine Image */}
+          <img
+            src="/slot-machine.png"
+            alt="Pixel Art Slot Machine"
+            className="w-full h-auto [image-rendering:pixelated] select-none pointer-events-none"
+          />
 
-          {/* Crying Emoji on the right of the final generated digit if not all 3 are the same */}
-          <div className="w-10 sm:w-14 flex items-center justify-center">
-            {isLoss && (
-              <span
-                role="img"
-                aria-label="Crying emoji"
-                className="text-4xl sm:text-5xl animate-bounce drop-shadow-[0_0_12px_rgba(239,68,68,0.4)] select-none"
-              >
+          {/* 
+            Reel Window Coordinates:
+            Matches the 3 white slot rectangles in the pixel-art cabinet.
+            top: 38.6%, left: 32.1%, width: 32.6%, height: 12.0%
+          */}
+          <div
+            className="absolute flex items-center justify-between z-10 pointer-events-none"
+            style={{
+              top: "38.6%",
+              left: "32.1%",
+              width: "32.6%",
+              height: "12.0%",
+            }}
+          >
+            {[0, 1, 2].map((idx) => {
+              const digitVal = digits ? digits[idx] : "-";
+              return (
+                <div
+                  key={idx}
+                  className="flex-1 h-full flex items-center justify-center text-center"
+                >
+                  <span
+                    className={`font-mono font-black text-2xl sm:text-4xl select-none leading-none transition-transform duration-100 ${
+                      hasWon
+                        ? "text-yellow-500 scale-125 animate-bounce drop-shadow-[0_0_8px_#fde047]"
+                        : "text-[#871919] drop-shadow-[1px_1px_0px_#3f0909]"
+                    } ${isSpinning ? "opacity-75 blur-[0.5px]" : "opacity-100"}`}
+                  >
+                    {digitVal}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Crying Emoji on the right of the final generated digit */}
+          {isLoss && (
+            <div
+              className="absolute z-20 flex items-center justify-center animate-bounce select-none pointer-events-none"
+              style={{
+                top: "36%",
+                left: "66%",
+                height: "16%",
+              }}
+            >
+              <span className="text-3xl sm:text-4xl drop-shadow-[0_0_12px_rgba(239,68,68,0.7)]">
                 😭
               </span>
-            )}
-            {hasWon && (
-              <span
-                role="img"
-                aria-label="Celebration party popper"
-                className="text-4xl sm:text-5xl animate-pulse select-none"
-              >
+            </div>
+          )}
+
+          {/* Winner Celebration Party Popper */}
+          {hasWon && (
+            <div
+              className="absolute z-20 flex items-center justify-center animate-pulse select-none pointer-events-none"
+              style={{
+                top: "36%",
+                left: "66%",
+                height: "16%",
+              }}
+            >
+              <span className="text-3xl sm:text-4xl drop-shadow-[0_0_15px_rgba(250,204,21,0.9)]">
                 🎉
               </span>
-            )}
-          </div>
-        </div>
+            </div>
+          )}
 
-        {/* Status Message */}
-        <div className="h-8 flex items-center justify-center mb-6">
-          {hasWon && (
-            <p className="text-base sm:text-lg font-bold text-yellow-300 tracking-wide animate-pulse">
-              🎆 JACKPOT! All 3 digits match! Enjoy the fireworks! 🎆
-            </p>
-          )}
-          {isLoss && (
-            <p className="text-xs sm:text-sm text-slate-400">
-              Not quite! Give it another shot. (Rolls: {attempts})
-            </p>
-          )}
-          {!isGenerated && (
-            <p className="text-xs sm:text-sm text-slate-500 font-mono">
-              Press generate to spin the numbers
-            </p>
-          )}
-        </div>
-
-        {/* Buttons */}
-        <div className="space-y-3">
+          {/* Clickable Lever Hotspot (right side of cabinet) */}
           <button
             onClick={() => generateDigits(false)}
             disabled={isSpinning}
-            className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-cyan-500 via-sky-400 to-blue-600 text-slate-950 font-bold text-base shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:pointer-events-none transition-all duration-200"
+            aria-label="Pull slot machine lever"
+            title="Click lever to spin!"
+            className="absolute z-20 cursor-pointer rounded-full opacity-0 hover:opacity-20 hover:bg-yellow-400 transition-opacity active:scale-95"
+            style={{
+              top: "35%",
+              left: "68%",
+              width: "10%",
+              height: "18%",
+            }}
+          />
+        </div>
+
+        {/* Status Message */}
+        <div className="h-9 flex items-center justify-center mt-5 mb-4">
+          {hasWon && (
+            <p className="text-sm sm:text-base font-black text-yellow-300 tracking-wider animate-pulse drop-shadow-[0_0_10px_#facc15]">
+              🎆 VEGAS JACKPOT! All 3 digits match! 🎆
+            </p>
+          )}
+          {isLoss && (
+            <p className="text-xs sm:text-sm text-amber-200/90 font-medium">
+              House takes the round! Try your luck again. (Spins: {attempts})
+            </p>
+          )}
+          {!isGenerated && (
+            <p className="text-xs sm:text-sm text-amber-300/80 font-mono">
+              Click the lever or press spin below
+            </p>
+          )}
+        </div>
+
+        {/* Control Buttons */}
+        <div className="space-y-3 max-w-xs mx-auto">
+          <button
+            onClick={() => generateDigits(false)}
+            disabled={isSpinning}
+            className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-black font-black text-sm uppercase tracking-wider shadow-[0_0_20px_rgba(245,158,11,0.5)] hover:shadow-[0_0_30px_rgba(245,158,11,0.8)] hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:pointer-events-none transition-all duration-200 border border-yellow-200 flex items-center justify-center gap-2"
           >
-            {isSpinning ? "Generating..." : "Generate 3 Digits"}
+            <span>{isSpinning ? "SPINNING REELS..." : "PULL LEVER / SPIN"}</span>
+            <span className="text-black">🎰</span>
           </button>
 
-          {/* Dev Cheat Button to preview fireworks instantly */}
+          {/* Dev Cheat Button for Instant Fireworks Verification */}
           <button
             onClick={() => generateDigits(true)}
             disabled={isSpinning}
-            className="text-xs text-slate-500 hover:text-cyan-400 font-mono underline decoration-dotted transition-colors"
+            className="text-xs text-amber-400/70 hover:text-amber-200 font-mono underline decoration-dotted transition-colors"
           >
-            [Dev Mode: Test Guaranteed Fireworks (7-7-7)]
+            [VIP Pass: Trigger Instant 7-7-7 Fireworks]
           </button>
         </div>
       </div>
