@@ -18,10 +18,19 @@ export default function NotGambling() {
   const [isSpinning, setIsSpinning] = useState(false);
   const [hasWon, setHasWon] = useState(false);
   const [attempts, setAttempts] = useState(0);
+  const [leverFrame, setLeverFrame] = useState(0);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const particlesRef = useRef<FireworkParticle[]>([]);
   const animationFrameRef = useRef<number | null>(null);
+
+  // Preload lever frames to ensure zero flicker on first animation
+  useEffect(() => {
+    [0, 1, 2, 3, 4].forEach((idx) => {
+      const img = new window.Image();
+      img.src = `/lever/lever-${idx}.png`;
+    });
+  }, []);
 
   // Fireworks explosion inside this section
   const launchFirework = useCallback((originX: number, originY: number) => {
@@ -126,45 +135,70 @@ export default function NotGambling() {
     }
   }, [launchFirework]);
 
+  // Play mechanical lever pull animation from the sprite sheet
+  const playLeverAnimation = (onLeverDown?: () => void) => {
+    const sequence = [
+      { frame: 1, delay: 65 },  // Pull forward
+      { frame: 2, delay: 75 },  // Halfway down
+      { frame: 3, delay: 100 }, // Full bottom pull (triggers reel spin!)
+      { frame: 4, delay: 110 }, // Spring back
+      { frame: 0, delay: 110 }, // Reset to resting upright
+    ];
+
+    let accumulatedTime = 0;
+    sequence.forEach(({ frame, delay }) => {
+      accumulatedTime += delay;
+      setTimeout(() => {
+        setLeverFrame(frame);
+        if (frame === 3 && onLeverDown) {
+          onLeverDown();
+        }
+      }, accumulatedTime);
+    });
+  };
+
   const generateDigits = (forceJackpot = false) => {
     if (isSpinning) return;
     setIsSpinning(true);
     setHasWon(false);
 
-    let counter = 0;
-    const spinInterval = setInterval(() => {
-      setDigits([
-        Math.floor(Math.random() * 10),
-        Math.floor(Math.random() * 10),
-        Math.floor(Math.random() * 10),
-      ]);
-      counter++;
+    // Play lever pull animation every time user interacts
+    playLeverAnimation(() => {
+      let counter = 0;
+      const spinInterval = setInterval(() => {
+        setDigits([
+          Math.floor(Math.random() * 10),
+          Math.floor(Math.random() * 10),
+          Math.floor(Math.random() * 10),
+        ]);
+        counter++;
 
-      if (counter > 16) {
-        clearInterval(spinInterval);
+        if (counter > 16) {
+          clearInterval(spinInterval);
 
-        let finalD1: number, finalD2: number, finalD3: number;
-        if (forceJackpot) {
-          finalD1 = 7;
-          finalD2 = 7;
-          finalD3 = 7;
-        } else {
-          finalD1 = Math.floor(Math.random() * 10);
-          finalD2 = Math.floor(Math.random() * 10);
-          finalD3 = Math.floor(Math.random() * 10);
+          let finalD1: number, finalD2: number, finalD3: number;
+          if (forceJackpot) {
+            finalD1 = 7;
+            finalD2 = 7;
+            finalD3 = 7;
+          } else {
+            finalD1 = Math.floor(Math.random() * 10);
+            finalD2 = Math.floor(Math.random() * 10);
+            finalD3 = Math.floor(Math.random() * 10);
+          }
+
+          const win = finalD1 === finalD2 && finalD2 === finalD3;
+          setDigits([finalD1, finalD2, finalD3]);
+          setIsSpinning(false);
+          setHasWon(win);
+          setAttempts((prev) => prev + 1);
+
+          if (win) {
+            triggerFireworksShow();
+          }
         }
-
-        const win = finalD1 === finalD2 && finalD2 === finalD3;
-        setDigits([finalD1, finalD2, finalD3]);
-        setIsSpinning(false);
-        setHasWon(win);
-        setAttempts((prev) => prev + 1);
-
-        if (win) {
-          triggerFireworksShow();
-        }
-      }
-    }, 55);
+      }, 55);
+    });
   };
 
   const isGenerated = digits !== null;
@@ -191,7 +225,7 @@ export default function NotGambling() {
           The Lucky Pixel Slot Machine
         </h2>
         <p className="text-amber-100/80 text-sm sm:text-base">
-          Pull the lever or click spin to generate 3 random digits in the slot reels. Match all 3 to set off fireworks!
+          Interact with the animated lever or click spin to generate 3 random digits in the slot reels. Match all 3 to set off fireworks!
         </p>
       </div>
 
@@ -199,9 +233,9 @@ export default function NotGambling() {
       <div className="relative z-10 max-w-[340px] sm:max-w-[420px] mx-auto text-center">
         {/* Machine Frame with Realistic Shadow */}
         <div className="relative mx-auto drop-shadow-[0_20px_45px_rgba(0,0,0,0.85)]">
-          {/* Base Slot Machine Image */}
+          {/* Base Slot Machine Image (Cabinet with lever cutout) */}
           <img
-            src="/slot-machine.png"
+            src="/slot-machine-base.png"
             alt="Pixel Art Slot Machine"
             className="w-full h-auto [image-rendering:pixelated] select-none pointer-events-none"
           />
@@ -241,13 +275,34 @@ export default function NotGambling() {
             })}
           </div>
 
+          {/* Animated Interactive Sprite Sheet Lever */}
+          <button
+            onClick={() => generateDigits(false)}
+            disabled={isSpinning}
+            aria-label="Pull slot machine lever"
+            title="Click lever to pull and spin!"
+            className="absolute z-20 cursor-pointer select-none focus:outline-none group"
+            style={{
+              top: "35.1%",
+              left: "67.3%",
+              width: "20.0%",
+              height: "32.2%",
+            }}
+          >
+            <img
+              src={`/lever/lever-${leverFrame}.png`}
+              alt="Animated Lever"
+              className="w-full h-full object-contain [image-rendering:pixelated] pointer-events-none transition-transform duration-75 group-hover:scale-[1.03] group-active:scale-95"
+            />
+          </button>
+
           {/* Crying Emoji on the right of the final generated digit */}
           {isLoss && (
             <div
-              className="absolute z-20 flex items-center justify-center animate-bounce select-none pointer-events-none"
+              className="absolute z-30 flex items-center justify-center animate-bounce select-none pointer-events-none"
               style={{
                 top: "36%",
-                left: "66%",
+                left: "65.5%",
                 height: "16%",
               }}
             >
@@ -260,10 +315,10 @@ export default function NotGambling() {
           {/* Winner Celebration Party Popper */}
           {hasWon && (
             <div
-              className="absolute z-20 flex items-center justify-center animate-pulse select-none pointer-events-none"
+              className="absolute z-30 flex items-center justify-center animate-pulse select-none pointer-events-none"
               style={{
                 top: "36%",
-                left: "66%",
+                left: "65.5%",
                 height: "16%",
               }}
             >
@@ -272,21 +327,6 @@ export default function NotGambling() {
               </span>
             </div>
           )}
-
-          {/* Clickable Lever Hotspot (right side of cabinet) */}
-          <button
-            onClick={() => generateDigits(false)}
-            disabled={isSpinning}
-            aria-label="Pull slot machine lever"
-            title="Click lever to spin!"
-            className="absolute z-20 cursor-pointer rounded-full opacity-0 hover:opacity-20 hover:bg-yellow-400 transition-opacity active:scale-95"
-            style={{
-              top: "35%",
-              left: "68%",
-              width: "10%",
-              height: "18%",
-            }}
-          />
         </div>
 
         {/* Status Message */}
@@ -298,12 +338,12 @@ export default function NotGambling() {
           )}
           {isLoss && (
             <p className="text-xs sm:text-sm text-amber-200/90 font-medium">
-              House takes the round! Try your luck again. (Spins: {attempts})
+              House takes the round! Pull again. (Spins: {attempts})
             </p>
           )}
           {!isGenerated && (
             <p className="text-xs sm:text-sm text-amber-300/80 font-mono">
-              Click the lever or press spin below
+              Pull the lever or press spin below
             </p>
           )}
         </div>
